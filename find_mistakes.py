@@ -30,13 +30,13 @@ def run_apertium_tagger(input, mode="text"):
     if mode != "text":
         echo_word = "echo '" + input + "'"
         cmd = echo_word + "| " \
-              "lt-proc -w kir.automorf.bin | " \
-              "cg-proc -1 kir.rlx.bin"
+              "lt-proc -w transducer/kir.automorf.bin | " \
+              "cg-proc -1 transducer/kir.rlx.bin"
     else:
         print("Processing text...")
-        cmd = "lt-proc -w kir.automorf.bin < " \
+        cmd = "lt-proc -w transducer/kir.automorf.bin < " \
               + working_directory + "/" + input + " | " \
-              "cg-proc -1 kir.rlx.bin"
+              "cg-proc -1 transducer/kir.rlx.bin"
 
     ps = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=working_directory)
     output = ps.communicate()[0]

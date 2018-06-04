@@ -25,7 +25,7 @@ To make changes to the transducer files:
     $ ./autogen.sh 
     $ make
     ```
-4. **kir.automorf.bin** and **kir.rlx.bin** should be in the same directory as .py files
+4. place new **kir.automorf.bin** and **kir.rlx.bin** files in the *transducer* directory
 
 ## Changes to Apertium transducer
 - fixed issue with **Й** and **й**

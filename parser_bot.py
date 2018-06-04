@@ -37,8 +37,8 @@ def run_apertium_tagger(input, mode="word"):
 
     echo_word = "echo '" + input + "'"
     cmd = echo_word + "| " \
-          "lt-proc -w kir.automorf.bin | " \
-          "cg-proc -1 kir.rlx.bin"
+          "lt-proc -w transducer/kir.automorf.bin | " \
+          "cg-proc -1 transducer/kir.rlx.bin"
     ps = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=working_directory)
     output = ps.communicate()[0]
     result = output.decode("utf-8")
@@ -83,7 +83,7 @@ def get_dict_entry(bot, update, contents, stem):
     russian_available = soup.find(id="words").find("a", href="/dictionaries/show2/")
     if russian_available:
         update.message.reply_text(dict_link)
-        update.message.reply_text("*В словаре нашелся перевод на русский язык*", parse_mode=ParseMode.MARKDOWN)
+        update.message.reply_text("*Russian translation found*", parse_mode=ParseMode.MARKDOWN)
         html_entry_text = soup.find(id="words").find(id=re.compile("^DicBody[0-9]+")).find("table").contents[3].contents[0].get_text()
         for line in re.split("[;]", html_entry_text):
             update.message.reply_text(line.strip())
@@ -94,20 +94,20 @@ def get_dict_entry(bot, update, contents, stem):
         if contents:
             get_dict_entry(bot, update, contents, stem)
         else:
-            update.message.reply_text("*В словаре не нашлось перевода на русский язык*", parse_mode=ParseMode.MARKDOWN)
+            update.message.reply_text("*No Russian translation found*", parse_mode=ParseMode.MARKDOWN)
 
 
 def greet_user(bot, update):
     user = update.message.from_user
-    update.message.reply_text('Привет {}! Вводите слова на кыргызском и я помогу вам с парсингом. \n'
-                              'Чтобы перейти в текстовый режим, нажмите /text_mode \n'
-                              'Чтобы выйти, нажмите /cancel в любое время'.format(user.first_name))
+    update.message.reply_text('Hi {}! Enter words in Kyrgyz and I will help you with parsing. \n'
+                              'To enter text mode, press /text_mode \n'
+                              'To exit, press /cancel at any time'.format(user.first_name))
     return PARSE
 
 
 def word_error(bot, update):
-    update.message.reply_text("Вы ввели больше одного слова, такой формат не поддерживается в текущем режиме. "
-                        "Для перехода в режим анализа текста нажмите /text_mode или введите следующее слово, чтобы продолжить.")
+    update.message.reply_text("You entered more than 1 word, which is not a supported input format in current mode. "
+                              "To switch to text mode, press /text_mode or enter next word to continue.")
 
 
 def parse_input(bot, update, user_data):
@@ -123,14 +123,14 @@ def parse_input(bot, update, user_data):
         user_data['stem'].append(result[3])
         reply = result_2 + "*" + result[3] + "*"
         update.message.reply_text(reply, parse_mode=ParseMode.MARKDOWN)
-        update.message.reply_text("Попробуем найти основу в словаре? \n"
-                                  "Нажмите /find или введите следующее слово, чтобы продолжить")
+        update.message.reply_text("Look up stem in the dictionary? \n"
+                                  "Press /find or enter next word to continue.")
     else:
         user_data['stem'].append(0)
         update.message.reply_text(result_2)
-        update.message.reply_text("Парсинг не сработал :( \n"
-                                  "Попробуем найти основу в словаре? \n"
-                                  "Нажмите /find или введите следующее слово, чтобы продолжить")
+        update.message.reply_text("Parsing didn't work :( \n"
+                                  "Look up stem in the dictionary? \n"
+                                  "Press /find or enter next word to continue.")
 
 
 def parse_text(bot, update):
@@ -152,7 +152,7 @@ def parse_text(bot, update):
 
     update.message.reply_text(" ".join(output_list), parse_mode=ParseMode.MARKDOWN)
     if error_list:
-        update.message.reply_text("⚠️ Эти слова не были распознаны парсером ⚠️")
+        update.message.reply_text("⚠️ These words were not recognized by the parser ⚠️")
         for word in error_list:
             update.message.reply_text(word)
     update.message.reply_text("*-----*", parse_mode=ParseMode.MARKDOWN)
@@ -175,7 +175,7 @@ def find_in_dict(bot, update, user_data):
                 get_dict_entry(bot, update, contents, stem_final)
                 break
         else:
-            update.message.reply_text("Похоже, в словаре нет такой основы :(")
+            update.message.reply_text("Seems like there is no such stem in the dictionary :(")
 
     else:
         dict_link = "http://el-sozduk.kg/ru/" + stem_final
@@ -184,22 +184,22 @@ def find_in_dict(bot, update, user_data):
         if contents:
             get_dict_entry(bot, update, contents, stem_final)
         else:
-            update.message.reply_text("Похоже, в словаре нет такой основы :(")
+            update.message.reply_text("Seems like there is no such stem in the dictionary :(")
 
 
 def switch_to_text(bot, update):
-    update.message.reply_text("Вы перешли в текстовый режим. \n"
-                              "Чтобы вернуться к пословному парсингу, нажмите /word_mode")
+    update.message.reply_text("You entered text mode. \n"
+                              "To return to word-by-word parsing, press /word_mode")
     return PARSE_TEXT
 
 
 def switch_to_words(bot, update):
-    update.message.reply_text("Вы перешли в режим пословного парсинга. Введите слово на кыргызском:")
+    update.message.reply_text("You entered word-by-word parsing mode. Enter a Kyrgyz word:")
     return PARSE
 
 
 def cancel(bot, update):
-    update.message.reply_text('Спасибо, что воспользовались этим сервисом. До свидания!')
+    update.message.reply_text('Thank you for using this service. Goodbye!')
     return ConversationHandler.END
 
 
