@@ -6,11 +6,11 @@ import re
 from string import punctuation
 from bs4 import BeautifulSoup
 from transliterate import translit
+from alphabet_detector import AlphabetDetector
 from telegram import ParseMode
 from telegram.ext import (Updater, CommandHandler, MessageHandler, ConversationHandler, RegexHandler, Filters)
 import logging
 
-from info_api import telegram_api
 
 logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO,
@@ -112,50 +112,62 @@ def word_error(bot, update):
 
 def parse_input(bot, update, user_data):
     input = update.message.text
-    result = run_apertium_tagger(input)
-    user_data.setdefault('stem', [])
-    result_2 = str(result[2]).replace("J", "Й")
-    result_2 = result_2.replace("j", "й")
-    user_data['stem'].append(result_2.lower())
-
-    if result[3] is not None:
-        user_data['stem'].append(1)
-        user_data['stem'].append(result[3])
-        reply = result_2 + "*" + result[3] + "*"
-        update.message.reply_text(reply, parse_mode=ParseMode.MARKDOWN)
-        update.message.reply_text("Look up stem in the dictionary? \n"
-                                  "Press /find or enter next word to continue.")
+    ad = AlphabetDetector()
+    if ad.is_latin(input):
+        update.message.reply_text("Right now only cyrillic characters are supported :( \n"
+                                  "Enter a Kyrgyz word:")
     else:
-        user_data['stem'].append(0)
-        update.message.reply_text(result_2)
-        update.message.reply_text("Parsing didn't work :( \n"
-                                  "Look up stem in the dictionary? \n"
-                                  "Press /find or enter next word to continue.")
+        result = run_apertium_tagger(input)
+        if user_data.setdefault("stem", []):
+            user_data["stem"] = []
+        result_2 = str(result[2]).replace("J", "Й")
+        result_2 = result_2.replace("j", "й")
+        user_data['stem'].append(result_2.lower())
+
+        if result[3] is not None:
+            user_data['stem'].append(1)
+            user_data['stem'].append(result[3])
+            reply = result_2 + "*" + result[3] + "*"
+            update.message.reply_text(reply, parse_mode=ParseMode.MARKDOWN)
+            update.message.reply_text("Look up stem in the dictionary? \n"
+                                      "Press /find or enter next word to continue.")
+        else:
+            user_data['stem'].append(0)
+            update.message.reply_text(result_2)
+            update.message.reply_text("Parsing didn't work :( \n"
+                                      "Look up stem in the dictionary? \n"
+                                      "Press /find or enter next word to continue.")
 
 
 def parse_text(bot, update):
     input = update.message.text
-    match_list = run_apertium_tagger(input, mode="text")
-    output_list, error_list = [], []
-    for word_match in match_list:
-        if not word_match:
-            continue
-        else:
-            word_match_1 = str(word_match[1]).replace("J", "Й")
-            word_match_1 = word_match_1.replace("j", "й")
-
-            if word_match[2] is not None:
-                output_list.append(word_match_1 + "*" + word_match[2] + "*")
+    ad = AlphabetDetector()
+    if ad.is_latin(input):
+        update.message.reply_text("Right now only cyrillic characters are supported :( \n"
+                                  "Enter a Kyrgyz text:")
+    else:
+        match_list = run_apertium_tagger(input, mode="text")
+        output_list, error_list = [], []
+        for word_match in match_list:
+            if not word_match:
+                continue
             else:
-                output_list.append("_" + word_match_1 + "_")
-                error_list.append(word_match_1)
+                word_match_1 = str(word_match[1]).replace("J", "Й")
+                word_match_1 = word_match_1.replace("j", "й")
 
-    update.message.reply_text(" ".join(output_list), parse_mode=ParseMode.MARKDOWN)
-    if error_list:
-        update.message.reply_text("⚠️ These words were not recognized by the parser ⚠️")
-        for word in error_list:
-            update.message.reply_text(word)
-    update.message.reply_text("*-----*", parse_mode=ParseMode.MARKDOWN)
+                if word_match[2] is not None:
+                    output_list.append(word_match_1 + "*" + word_match[2] + "*")
+                else:
+                    output_list.append("_" + word_match_1 + "_")
+                    error_list.append(word_match_1)
+
+        update.message.reply_text(" ".join(output_list), parse_mode=ParseMode.MARKDOWN)
+        if error_list:
+            update.message.reply_text("⚠️ These words were not recognized by the parser ⚠️")
+            for word in error_list:
+                update.message.reply_text(word)
+        update.message.reply_text("*-----*", parse_mode=ParseMode.MARKDOWN)
+
 
 def find_in_dict(bot, update, user_data):
     stem = user_data['stem']
@@ -179,7 +191,6 @@ def find_in_dict(bot, update, user_data):
 
     else:
         dict_link = "http://el-sozduk.kg/ru/" + stem_final
-        print(dict_link)
         contents = check_link(dict_link)
         if contents:
             get_dict_entry(bot, update, contents, stem_final)
@@ -204,7 +215,7 @@ def cancel(bot, update):
 
 
 if __name__ == "__main__":
-    mybot = Updater(telegram_api)
+    mybot = Updater(os.environ["KYRGYZ_BOT"])
     dp = mybot.dispatcher
 
     parse_kyrgyz = ConversationHandler(

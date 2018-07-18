@@ -1,9 +1,9 @@
 *.log
 *.txt
-info_api.py
 *_Store
 env/
 literature/
 illustrations/
+handout/
 __pycache__/
 .idea/
