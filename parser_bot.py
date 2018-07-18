@@ -17,6 +17,8 @@ logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',
                     filename='bot.log'
                     )
 
+logger = logging.getLogger(__name__)
+
 PARSE, PARSE_TEXT = 0, 1
 
 TOKEN = os.environ["KYRGYZ_BOT"]
@@ -218,7 +220,7 @@ def cancel(bot, update):
 
 
 def error(bot, update, error):
-    logger.warn('Update "%s" caused error "%s"' % (update, error))
+    logger.warning('Update "%s" caused error "%s"' % (update, error))
 
 
 if __name__ == "__main__":
