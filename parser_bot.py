@@ -19,6 +19,9 @@ logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',
 
 PARSE, PARSE_TEXT = 0, 1
 
+TOKEN = os.environ["KYRGYZ_BOT"]
+PORT = int(os.environ.get("PORT", "5000"))
+
 HEADERS = {'User-Agent':
            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) '
            'AppleWebKit/537.36 (KHTML, like Gecko) '
@@ -214,9 +217,13 @@ def cancel(bot, update):
     return ConversationHandler.END
 
 
+def error(bot, update, error):
+    logger.warn('Update "%s" caused error "%s"' % (update, error))
+
+
 if __name__ == "__main__":
-    mybot = Updater(os.environ["KYRGYZ_BOT"])
-    dp = mybot.dispatcher
+    updater = Updater(TOKEN)
+    dp = updater.dispatcher
 
     parse_kyrgyz = ConversationHandler(
         entry_points=[CommandHandler("start", greet_user)],
@@ -235,5 +242,12 @@ if __name__ == "__main__":
 
     dp.add_handler(parse_kyrgyz)
 
-    mybot.start_polling()
-    mybot.idle()
+    dp.add_error_handler(error)
+
+    updater.start_webhook(listen="0.0.0.0",
+                          port=PORT,
+                          url_path=TOKEN)
+
+    updater.bot.setWebhook("https://kyrgyz-parser-bot.herokuapp.com/" + TOKEN)
+
+    updater.idle()
