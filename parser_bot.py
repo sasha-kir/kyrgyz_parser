@@ -22,7 +22,6 @@ logger = logging.getLogger(__name__)
 PARSE, PARSE_TEXT = 0, 1
 
 TOKEN = os.environ["KYRGYZ_BOT"]
-PORT = int(os.environ.get("PORT", "5000"))
 
 HEADERS = {'User-Agent':
            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) '
@@ -246,10 +245,6 @@ if __name__ == "__main__":
 
     dp.add_error_handler(error)
 
-    updater.start_webhook(listen="0.0.0.0",
-                          port=PORT,
-                          url_path=TOKEN)
-
-    updater.bot.setWebhook("https://kyrgyz-parser-bot.herokuapp.com/" + TOKEN)
+    updater.start_polling()
 
     updater.idle()
