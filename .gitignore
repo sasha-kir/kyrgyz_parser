@@ -1,5 +1,6 @@
 *.log
 *.txt
+!requirements.txt
 *_Store
 env/
 literature/

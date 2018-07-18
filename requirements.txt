@@ -1,0 +1,10 @@
+alphabet-detector==0.0.7
+beautifulsoup4==4.6.0
+bs4==0.0.1
+certifi==2018.4.16
+future==0.16.0
+python-telegram-bot==10.1.0
+six==1.11.0
+telegram==0.0.1
+tqdm==4.23.4
+transliterate==1.10.1
